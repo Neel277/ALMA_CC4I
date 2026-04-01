@@ -6,9 +6,9 @@ app = Flask(__name__)
 # --- MYSQL CONFIGURATION ---
 db_config = {
     'host': 'localhost',
-    'user': 'root',
-    'password': 'root',
-    'database': 'alma_cc4i'
+    'user': '',
+    'password': '',
+    'database': 'DB_name'
 }
 
 def get_incidents():
