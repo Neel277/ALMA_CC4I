@@ -13,9 +13,9 @@ from sklearn.cluster import DBSCAN
 # --- CONFIG ---
 DB_CONFIG = {
     'host': 'localhost',
-    'user': 'root',
-    'password': 'root', 
-    'database': 'alma_cc4i'
+    'user': '',
+    'password': '', 
+    'database': 'DB_name'
 }
 
 # NASA VIIRS Feed (South Asia)
