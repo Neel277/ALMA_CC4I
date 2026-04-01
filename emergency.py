@@ -4,14 +4,14 @@ from gtts import gTTS
 import mysql.connector
 
 # --- CONFIG ---
-TOKEN = "8385314661:AAFXTjIjPBnD0bBfAPriEM5YQnFytQxz6jU" 
-YOUR_CHAT_ID = "7974332351" 
+TOKEN = "telegram token" 
+YOUR_CHAT_ID = "chat_id" 
 
 DB_CONFIG = {
     'host': 'localhost',
-    'user': 'root',
-    'password': 'root',
-    'database': 'alma_cc4i'
+    'user': '',
+    'password': '',
+    'database': 'DB_name'
 }
 
 async def broadcast_evacuation():
