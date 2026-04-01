@@ -38,6 +38,21 @@ The core of the prediction relies on converting standard meteorological coordina
 # Extract of the directional 180-degree transposition
 flow_direction = (direction + 180) % 360
 rads = math.radians(flow_direction)
+
+
+## ⚙️ System Setup & Installation
+
+### Prerequisites
+* **Python 3.8+**
+* **MySQL Server** (Running locally or hosted)
+* **API Keys:** NASA FIRMS API (for VIIRS thermal data) and Open-Meteo API.
+
+### Installation Steps
+
+1. **Clone the repository:**
+   ```bash
+   cd ALMA
+
     
 delta_lat = (dist_km * math.cos(rads)) / 111.0
 delta_lon = (dist_km * math.sin(rads)) / 111.0
