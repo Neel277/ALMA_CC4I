@@ -4,12 +4,12 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
 
 # --- 1. CONFIGURATION ---
-TOKEN = "8385314661:AAFXTjIjPBnD0bBfAPriEM5YQnFytQxz6jU" 
+TOKEN = "enter the token here " 
 DB_CONFIG = {
     'host': 'localhost',
-    'user': 'root',
-    'password': 'root', # <--- PUT YOUR MYSQL WORKBENCH PASSWORD HERE
-    'database': 'alma_cc4i'
+    'user': '',
+    'password': '', # <--- PUT YOUR MYSQL WORKBENCH PASSWORD HERE
+    'database': 'DB_name'
 }
 
 # --- 2. THE BRAIN (Save to DB) ---
