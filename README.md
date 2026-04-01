@@ -32,27 +32,55 @@ The system operates on a four-tier architecture:
 ## 🧮 The Predictive Model (Physics & Vector Math)
 The core of the prediction relies on converting standard meteorological coordinates into action-oriented geospatial paths. 
 
-
-
 ```python
 # Extract of the directional 180-degree transposition
 flow_direction = (direction + 180) % 360
 rads = math.radians(flow_direction)
 
 
-## ⚙️ System Setup & Installation
+Prerequisites
+Python 3.8+
 
-### Prerequisites
-* **Python 3.8+**
-* **MySQL Server** (Running locally or hosted)
-* **API Keys:** NASA FIRMS API (for VIIRS thermal data) and Open-Meteo API.
+MySQL Server (Running locally or hosted)
 
-### Installation Steps
+API Keys: NASA FIRMS API (for VIIRS thermal data), Open-Meteo API, and Telegram Bot API.
 
-1. **Clone the repository:**
-   ```bash
-   cd ALMA
+1. Clone the repository
 
-    
+2. Install Python dependencies:
+  pip install pandas scikit-learn requests mysql-connector-python gTTS
+
+3. Database Configuration:
+
+Ensure your MySQL server is running.
+Execute the SQL schema provided in database_setup.sql to create the required tables for storing advection coordinates and timestamp data.
+Update the database credentials (user, password, host) inside the Python script
+
+4. API Configuration:
+
+Insert your NASA FIRMS API key into the designated variable in the backend script.
+Insert your Telegram Bot token if utilizing the Autonomous Broadcaster.
+
+5. Start the Core Engine:
+
+Run the backend Python script to begin orbital ingestion, ML clustering, and advection calculations.
+python satellite_monitor.py
+
+Note: The terminal will output live logs detailing the raw pixel count, DBSCAN fusion results, and predictive coordinates.
+
+6. Launch the Tactical Dashboard: run python app.py
+
+
+📂 File Structure & Architecture Breakdown
+satellite_monitor.py The core Python backend engine. This script handles the multi-stage processing pipeline: pulling raw telemetry from NASA, applying the bivariate noise filter, executing DBSCAN clustering to fuse overlapping pixels, running the modified Rothermel physics equations, and pushing to the MySQL database.
+
+index.html (and associated JS/CSS)
+The frontend Tactical Web Dashboard. Built utilizing Leaflet.js, this dark-mode UI pulls the processed coordinate data from the database. It dynamically renders the origin clusters, draws the predictive threat-cones (cyan polygons), and assigns Tiered Behavioural Action levels based on wind thresholds.
+
+database_setup.sql
+The structural blueprint for the MySQL database, ensuring the correct formatting for timestamped coordinate arrays and wind vectors.
+Open the frontend UI to visualize the real-time threat matrix. You can serve it using a simple local server:
+
+# Spherical Earth Coordinate Projection
 delta_lat = (dist_km * math.cos(rads)) / 111.0
 delta_lon = (dist_km * math.sin(rads)) / 111.0
