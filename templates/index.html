@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ALMA C4I | Command Center</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; margin: 0; background: #1a1a1a; color: #0f0; }
+        #map { height: 100vh; width: 100%; }
+        #overlay { 
+            position: absolute; top: 20px; right: 20px; 
+            background: rgba(0,0,0,0.9); padding: 20px; 
+            z-index: 1000; border: 1px solid #0f0; border-radius: 5px; 
+        }
+        h1 { margin: 0 0 10px 0; color: #ff3333; font-size: 24px; text-transform: uppercase; }
+        .stat-box { font-size: 18px; color: white; }
+    </style>
+</head>
+<body>
+
+    <div id="overlay">
+        <h1>🛡 Alma C4I Grid</h1>
+        <div id="stats" class="stat-box">System Initializing...</div>
+        <div id="logs" style="font-size: 12px; color: #aaa; margin-top: 10px;"></div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // 1. Initialize Map (Centered on INDIA default: 21.0, 78.0)
+        var map = L.map('map').setView([21.0000, 78.0000], 5); // Changed to focus on India!
+        
+        // Dark Mode Map Tiles
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap contributors & CartoDB'
+        }).addTo(map);
+
+        var markers = L.layerGroup().addTo(map);
+
+        function log(msg) {
+            console.log(msg);
+            document.getElementById('logs').innerText = msg;
+        }
+
+        // 2. The Fetch Loop
+        function loadIncidents() {
+            fetch('/api/incidents') // Changed from /get_incidents if you were using that
+            .then(response => {
+                if (!response.ok) throw new Error("HTTP Error " + response.status);
+                return response.json();
+            })
+            .then(data => {
+                log("✅ Data Received: " + data.length + " incidents.");
+                document.getElementById('stats').innerText = data.length + " ACTIVE THREATS";
+                
+                // Clear old markers before drawing new ones
+                markers.clearLayers();
+
+                // THIS IS THE LOOP. "incident" is born here.
+                data.forEach(incident => {
+                    if (incident.location_lat && incident.location_lon) {
+                        
+                        var color, radius;
+
+                        // --- 1. SATELLITE VECTOR LOGIC (The Predictive Arrow) ---
+                                                                        // --- 1. SATELLITE VECTOR LOGIC ---
+                        if (incident.severity === 'SATELLITE_VECTOR') {
+                            var color = '#ff00ff'; 
+                            var radius = 20; 
+                            
+                            try {
+                                // A. Safely parse Origin Coordinates into true Numbers
+                                // (Checks both 'lat' and 'location_lat' depending on your database column names)
+                                var originLat = parseFloat(incident.lat || incident.location_lat);
+                                var originLon = parseFloat(incident.lon || incident.location_lon);
+
+                                // B. Parse Prediction Coordinates
+                                var parts = incident.transcript.split("VECTOR_PRED: ")[1].split(",");
+                                var futureLat = parseFloat(parts[0]);
+                                var futureLon = parseFloat(parts[1]);
+                                
+                                // timestamp
+                                var timeData = "Unknown";
+                                if(incident.transcript.includes(" ON ")) {
+            // This grabs everything between " ON " and ". WIND" (which is now your IST time!)
+                            timeData = incident.transcript.split(" ON ")[1].split(". WIND")[0]; 
+                                }
+                                
+                                // C. Extract Wind cleanly
+                                var windData = "Unknown";
+                                if(incident.transcript.includes("WIND: ")) {
+                                    windData = incident.transcript.split("WIND: ")[1].split(". VECTOR")[0];
+                                }
+
+                                // D. The Clickable HUD Text 
+                                var hudHTML = `
+                                    <div style="background-color: #111; color: #00ffff; font-family: 'Courier New', monospace; padding: 12px; border: 1px solid #ff00ff; border-radius: 4px; min-width: 240px; margin: -14px;">
+                                        <b style="color: #ff00ff; font-size: 14px;">🔥 ACTIVE INFERNO</b><br>
+                                        <hr style="border-color: #333; margin: 8px 0;">
+                                        <span style="color: #fff;"><b>📍 ORIGIN:</b></span> ${originLat.toFixed(4)}, ${originLon.toFixed(4)}<br>
+                                        <span style="color: #ff3333;"><b>🕒 DETECTED:</b></span> ${timeData}<br>
+                                        <span style="color: #fff;"><b>💨 WIND:</b></span> ${windData}<br>
+                                        <span style="color: #ff9900;"><b>🔮 PATH:</b></span> MOVING TO ${futureLat.toFixed(4)}, ${futureLon.toFixed(4)}
+                                    </div>
+                                `;
+
+                                // E. Draw the Origin Dot
+                                var circle = L.circleMarker([originLat, originLon], {
+                                    color: color, fillColor: color, fillOpacity: 0.8, radius: radius
+                                }).addTo(markers);
+                                
+                                // F. Bind the Clickable Popup
+                                circle.bindPopup(hudHTML, {
+                                    autoClose: false,
+                                    closeOnClick: false
+                                });
+                                
+                                // G. Draw the Vector (The Cyan Arrow)
+                                L.polyline([
+                                    [originLat, originLon], 
+                                    [futureLat, futureLon]                          
+                                ], {
+                                    color: 'cyan', 
+                                    weight: 3,
+                                    dashArray: '5, 8' 
+                                }).addTo(markers);
+                                
+                                // H. Draw the "Kill Zone" (End Point)
+                                L.circle([futureLat, futureLon], {
+                                    color: 'cyan', fillOpacity: 0.3, radius: 2000 
+                                }).addTo(markers).bindTooltip("T+1hr", {permanent: true, direction: "right"});
+                                
+                            } catch(e) { 
+                                console.log("Error drawing fire vector: ", e); 
+                            }
+                        }
+                        // --- 3. CITIZEN/GROUND SIGNAL LOGIC ---
+                        else {
+                            color = (incident.severity === 'RED') ? '#ff0000' : '#ffff00'; 
+                            radius = (incident.severity === 'RED') ? 15 : 8;
+
+                            var circle = L.circleMarker([incident.location_lat, incident.location_lon], {
+                                color: color, fillColor: color, fillOpacity: 0.8, radius: radius
+                            });
+
+                            circle.bindPopup(`
+                                <div style="color:black; font-family:sans-serif;">
+                                    <strong style="color:red">⚠ ${incident.severity}</strong><br>
+                                    <b>SOURCE:</b> ${incident.reporter_name}<br>
+                                    <b>DATA:</b> "${incident.transcript}"<br>
+                                </div>
+                            `);
+                            circle.addTo(markers);
+                        }
+                    }
+                });
+            })
+            .catch(err => {
+                log("❌ SYSTEM FAILURE: " + err.message);
+            });
+        }
+
+        // Run immediately, then every 3 seconds
+        loadIncidents();
+        setInterval(loadIncidents, 60000);
+    </script>
+</body>
+</html>
