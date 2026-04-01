@@ -4,9 +4,9 @@ import time
 # YOUR CONFIG
 DB_CONFIG = {
     'host': 'localhost',
-    'user': 'root',
-    'password': 'root', 
-    'database': 'alma_cc4i'
+    'user': '',
+    'password': '', 
+    'database': 'DB_name'
 }
 
 # COORDS: Pick a spot slightly away from your "User" location to show proximity
